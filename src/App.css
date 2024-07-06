@@ -1,0 +1,159 @@
+.start {
+  opacity: 0;
+}
+.end {
+  opacity: 1;
+  transition: opacity 1.5s;
+}
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+/* App-header에 배경 이미지 추가 및 하단 흐림 효과 */
+.App-header {
+  background-image: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0) 50%,
+      rgba(255, 255, 255, 1) 100%
+    ),
+    url("./img/Header_img.png");
+  background-size: 10% 10%;
+  height: 100vh;
+
+  /* 필요에 따라 조정 */
+  background-size: cover;
+  background-position: center;
+  position: relative; /* SVG를 올바르게 위치시키기 위해 */
+}
+
+@keyframes moveAlongPath {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.moving-image {
+  animation: moveAlongPath 10s linear infinite;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.header-Nav {
+  background-color: transparent;
+  align-items: end;
+}
+
+.nav-link-spacing {
+  margin-right: 20px; /* 오른쪽 마진으로 간격 조절 */
+}
+
+/* 마지막 네비게이션 링크의 마진 제거 */
+.nav-link-spacing:last-child {
+  margin-right: 0;
+}
+
+/* 네비게이션 링크 호버 스타일 */
+.nav-link-spacing:hover {
+  text-decoration: underline; /* 호버 시 밑줄 추가 */
+  text-decoration-color: white; /* 밑줄 색상 지정 */
+}
+.linkItem {
+  color: inherit; /* 링크 색상을 부모 요소로부터 상속받습니다. */
+  text-decoration: none; /* 기본 상태에서 밑줄을 제거합니다. */
+}
+
+.linkItem:hover {
+  text-decoration: underline; /* 마우스를 올렸을 때 밑줄을 추가합니다. */
+}
+.topMenu {
+  transition: all 0.3s ease;
+  width: 100%;
+  height: 80px;
+  /* 초기 배경색은 투명 */
+  display: flex;
+  justify-content: flex-end; /* 내부 아이템들을 오른쪽으로 정렬 */
+  align-items: center; /* 아이템들을 세로 방향 가운데 정렬 */
+  padding-right: 40px; /* 오른쪽 패딩을 추가하여 내부 아이템들이 화면 끝에 닿지 않도록 함 */
+  z-index: 10;
+  position: fixed;
+}
+.topMenu.scrolled {
+  background-color: white; /* 스크롤 시 배경색 */
+  color: black; /* 글자색 검정 */
+}
+
+.menuItem {
+  position: relative;
+  text-align: center;
+  color: #3b3b3b;
+  font-size: max(15px, 1.3021vw);
+  font-family: "Pretendard";
+  font-weight: 500;
+  padding-left: 4.1667vw;
+}
+
+.logo {
+  left: 7.5vw;
+  top: 2.7083vw;
+
+  position: absolute;
+  color: #3b3b3b;
+  font-size: 2.6042vw;
+  font-family: "Pretendard";
+  font-weight: 600;
+  word-wrap: break-word;
+}
+
+/* App.css에 추가 */
+.entering {
+  opacity: 0;
+}
+.entered {
+  opacity: 1;
+  transition: opacity 100ms ease-in-out;
+}
+.exiting {
+  opacity: 1;
+  transition: opacity 100ms ease-in-out;
+}
+.exited {
+  opacity: 0;
+}
+.menuItemHome.mainPage,
+.menuItemStartPlanning.mainPage,
+.menuItemLogin.mainPage,
+.menuItemSignUp.mainPage {
+  color: white; /* 밝은 회색으로 변경 */
+}
+.hrSvgContainer {
+  display: flex;
+  align-items: center; /* 세로축 중앙 정렬 */
+  justify-content: flex-end;
+}
+
+.hrSvgContainer svg {
+  margin-left: 1vw; /* hr 선과 svg 사이의 간격 조정 */
+}
+.body-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+}
