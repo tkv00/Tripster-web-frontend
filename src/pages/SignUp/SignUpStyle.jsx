@@ -1,6 +1,7 @@
 import styled from "styled-components";
 
 export const SignUpContainer = styled.div`
+  
   width: 100%;
   height: auto;
   align-items: center;
@@ -9,7 +10,6 @@ export const SignUpContainer = styled.div`
   flex-direction: column;
   display: flex; /* Updated from 'position: flex' to 'display: flex' */
   background: white;
-  align-items: center;
 `;
 
 export const Title = styled.h2`

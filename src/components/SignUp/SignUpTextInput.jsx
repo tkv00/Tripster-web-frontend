@@ -1,11 +1,18 @@
 import styled from "styled-components";
 import { theme } from "../../styles/theme.js";
-import React, { useState, ChangeEvent,useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 
 //위 배열은 로그인 페이지에다가 넣고 구현하자
-export default function SignUpTextInput({ item, value, onChange }) {
+export default function SignUpTextInput({
+  item,
+  value,
+  onChange,
+  valid,
+  errorMessage,
+}) {
   //이메일 상태관리
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(value);
   const [emailList, setEmailList] = useState([]);
 
   useEffect(() => {
@@ -37,8 +44,25 @@ export default function SignUpTextInput({ item, value, onChange }) {
       setEmailList(userEmails);
     }
   };
+
+  //비밀번호 보기-숨기기
+  const [isHidePwd, setIsHidePwd] = useState(false);
+  const passwordRef = useRef(null);
+
+  const handleShowPwdChecked = async () => {
+    const password = await passwordRef.current;
+    if (password === null) return;
+
+    await setIsHidePwd(!isHidePwd);
+    if (!isHidePwd) {
+      password.type = "text";
+    } else {
+      password.type = "password";
+    }
+  };
+
   //아이디 input상자,중복확인
-  if (value === "id") {
+  if (item.key === "id") {
     return (
       <Container>
         <Text>{item.title}</Text>
@@ -51,10 +75,11 @@ export default function SignUpTextInput({ item, value, onChange }) {
           ></SmallInput>
           <DupButton>중복확인</DupButton>
         </RowContainer>
+        {!valid && <ErrorMessage>{errorMessage}</ErrorMessage>}
       </Container>
     );
     //이메일 input상자,이메일도메인 확인
-  } else if (value === "email") {
+  } else if (item.key === "email") {
     return (
       <Container>
         <Text>{item.title}</Text>
@@ -71,6 +96,7 @@ export default function SignUpTextInput({ item, value, onChange }) {
               <option value={email} key={index}></option>
             ))}
         </datalist>
+        {!valid && <ErrorMessage>{errorMessage}</ErrorMessage>}
       </Container>
     );
     //비밀번호,비밀번호확인,이름
@@ -78,13 +104,34 @@ export default function SignUpTextInput({ item, value, onChange }) {
     return (
       <Container>
         <Text>{item.title}</Text>
-        <Input
-          //비밀번호와 텍스트입력 구별
-          type={item.key.includes("password") ? "password" : "text"}
-          placeholder={item.placeHolder}
-          onChange={handleInputChange}
-          value={value}
-        ></Input>
+        <RowContainer>
+          <Input
+            //비밀번호와 텍스트입력 구별
+            type={
+              item.key.includes("password")
+                ? !isHidePwd
+                  ? "password"
+                  : "text"
+                : "text"
+            }
+            placeholder={item.placeHolder}
+            onChange={handleInputChange}
+            value={inputValue}
+            ref={passwordRef}
+          />
+          {item.key.includes("password") ? (
+            <EyeIconContainer onClick={handleShowPwdChecked}>
+              {/* 비밀번호 안보이기 */}
+              {!isHidePwd ? (
+                <AiFillEyeInvisible style={{ fontSize: "30px" }} />
+              ) : (
+                // 비밀번호 보이기
+                <AiFillEye style={{ fontSize: "30px" }}></AiFillEye>
+              )}
+            </EyeIconContainer>
+          ) : null}
+        </RowContainer>
+        {!valid && <ErrorMessage>{errorMessage}</ErrorMessage>}
       </Container>
     );
   }
@@ -98,9 +145,11 @@ const Container = styled.section`
   margin: 10px;
   text-align: left;
 `;
+
 const RowContainer = styled.section`
-  flex-direction: row;
+  position: relative;
   display: flex;
+  align-items: center;
 `;
 const Text = styled.h2`
   text-align: left;
@@ -131,6 +180,8 @@ const SmallInput = styled.input`
 const DupButton = styled.button`
   padding: 0 10px;
   border: none;
+  font-size: 20px;
+  font-weight: 600;
   border-radius: 20px;
   color: white; //아이디 상태변화로 버튼색 변화.
   margin-left: 10px;
@@ -139,4 +190,16 @@ const DupButton = styled.button`
   background-color: ${({ theme }) => theme.color.globalGray};
   text-align: center;
 `;
-//이메일 도메인 선택
+const ErrorMessage = styled.p`
+  color: red;
+  font-size: 14px;
+  margin-top: 0px;
+`;
+const EyeIconContainer = styled.div`
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  height: 100%;
+`;
