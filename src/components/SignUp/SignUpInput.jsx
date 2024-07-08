@@ -18,6 +18,7 @@ function SignUpInput() {
     emailLocalPart: "",
     emailDomain: "",
   });
+
   const [isIdChecked, setIsIdChecked] = useState(false); // 아이디 중복 검사 여부 상태
   const [errors, setErrors] = useState({});
   const [isIdValid, setIsIdValid] = useState(false);
@@ -36,6 +37,7 @@ function SignUpInput() {
       email: isValidEmail ? "" : "유효한 이메일 주소를 입력해주세요.",
     }));
   };
+  
   const checkIdDuplication = async () => {
     setIsIdChecked(false); // 중복 확인 전 상태를 초기화
     try {
