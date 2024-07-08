@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import SignUpTextInput from "../../components/SignUp/SignUpTextInput";
+import SignUpTextInput from "../../components/SignUp/SignUpTextInput.jsx";
 import Wrapper from "../../components/Wrapper";
 import styled from "styled-components";
 import { SignUpContainer, Title } from "./SignUpStyle";
 import { theme } from "../../styles/theme";
 import useValid from "../../hooks/useValid";
+import useIdCheck from "../../hooks/useIdCheck";
 
 const INPUT_ITEM = [
   {
@@ -65,7 +66,6 @@ function SignUpPage3() {
           <InfoContainer>
             {INPUT_ITEM.map((item) => (
               <SignUpTextInput
-              
                 item={item}
                 key={item.key}
                 value={form[item.key]}

@@ -1,19 +1,22 @@
 import styled from "styled-components";
 import { theme } from "../../styles/theme.js";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, memo, useCallback } from "react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-
+import useIdCheck from "../../hooks/useIdCheck.jsx";
 //위 배열은 로그인 페이지에다가 넣고 구현하자
-export default function SignUpTextInput({
-  item,
-  value,
-  onChange,
-  valid,
-  errorMessage,
-}) {
+const SignUpTextInput = ({ item, value, onChange, valid, errorMessage }) => {
   //이메일 상태관리
   const [inputValue, setInputValue] = useState(value);
   const [emailList, setEmailList] = useState([]);
+
+  //isIdCheck 커스텀 훅
+  const { idForm, idCheck, handleChange, handleIdCheck } = useIdCheck({
+    id: "",
+    password: "",
+    passwordCheck: "",
+    name: "",
+    email: "",
+  });
 
   useEffect(() => {
     setInputValue(value);
@@ -43,6 +46,7 @@ export default function SignUpTextInput({
       );
       setEmailList(userEmails);
     }
+    handleChange(e);
   };
 
   //비밀번호 보기-숨기기
@@ -72,8 +76,9 @@ export default function SignUpTextInput({
             placeholder={item.placeHolder}
             value={inputValue}
             onChange={handleInputChange}
+            name="id"
           ></SmallInput>
-          <DupButton>중복확인</DupButton>
+          <DupButton onClick={handleIdCheck}>중복확인</DupButton>
         </RowContainer>
         {!valid && <ErrorMessage>{errorMessage}</ErrorMessage>}
       </Container>
@@ -89,6 +94,7 @@ export default function SignUpTextInput({
           value={inputValue}
           onChange={handleInputChange}
           list="email"
+          name="email"
         />
         <datalist id="email">
           {emailList &&
@@ -118,6 +124,7 @@ export default function SignUpTextInput({
             onChange={handleInputChange}
             value={inputValue}
             ref={passwordRef}
+            name={item.key}
           />
           {item.key.includes("password") ? (
             <EyeIconContainer onClick={handleShowPwdChecked}>
@@ -135,8 +142,8 @@ export default function SignUpTextInput({
       </Container>
     );
   }
-}
-
+};
+export default memo(SignUpTextInput);
 //=============================================================================================================================
 
 const Container = styled.section`
