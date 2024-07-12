@@ -3,42 +3,30 @@ import axios from "axios";
 import { Report } from "notiflix/build/notiflix-report-aio";
 
 export default function useIdCheck(initialForm) {
-  const [idCheck, setIdCheck] = useState(false);
+  const [isDuplicated, setIsDuplicated] = useState(null);
   const [idForm, setIdForm] = useState(initialForm);
 
   const SERVER_URL = process.env.REACT_APP_BACKEND_URL;
   const TEST_URL = "http://localhost:3001";
 
-  const handleIdCheck = useCallback(async () => {
-    setIdCheck(false);
+  const idCheck = useCallback(async (id) => {
+    setIsDuplicated(null);
     try {
-      const response = await axios.get(`${TEST_URL}/users?id=${idForm.id}`);
-
-      if (response.data.length === 0) {
-        Report.success("사용가능 아이디", "사용가능한 아이디입니다.", "확인");
-        setIdCheck(true);
-      } else {
-        Report.failure(
-          "중복된 아이디",
-          "중복된 아이디입니다. 다시 시도하세요.",
-          "확인"
-        );
-        setIdCheck(false);
-      }
+      const response = await axios.get(`${TEST_URL}/users?id=${id}`);
+      const isDup = response.data.length > 0;
+      setIsDuplicated(isDup);
+      return isDup;
     } catch (error) {
       console.error("아이디 중복 확인 실패", error);
-      Report.failure(
-        "오류발생",
-        "아이디 중복 확인 중 오류가 발생했습니다.",
-        "확인"
-      );
+      setIsDuplicated(null);
+      return null;
     }
-  }, [idForm.id]);
+  }, []);
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    setIdForm((prevForm) => ({ ...prevForm, [name]: value }));
+    // 여기서는 아무 것도 하지 않습니다. 상태 업데이트는 부모 컴포넌트에서 처리합니다.
   }, []);
 
-  return { idForm, setIdForm, idCheck, handleIdCheck, handleChange };
+  return { idCheck, handleChange, isDuplicated };
 }

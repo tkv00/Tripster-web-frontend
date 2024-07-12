@@ -1,16 +1,58 @@
-import styled from "styled-components";
-import { theme } from "../../styles/theme.js";
 import React, { useState, useEffect, useRef, memo, useCallback } from "react";
+import styled from "styled-components";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-import useIdCheck from "../../hooks/useIdCheck.jsx";
-//위 배열은 로그인 페이지에다가 넣고 구현하자
-const SignUpTextInput = ({ item, value, onChange, valid, errorMessage }) => {
-  //이메일 상태관리
+import axios from "axios";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
+// Custom hook for ID check
+export function useIdCheck(initialForm) {
+  const [isDuplicated, setIsDuplicated] = useState(null);
+  const [idForm, setIdForm] = useState(initialForm);
+
+  const SERVER_URL = process.env.REACT_APP_BACKEND_URL;
+  const TEST_URL = "http://localhost:3001";
+
+  const idCheck = useCallback(async (id) => {
+    setIsDuplicated(null);
+    try {
+      const response = await axios.get(`${TEST_URL}/users?id=${id}`);
+      const isDup = response.data.length > 0;
+      setIsDuplicated(isDup);
+      return isDup;
+    } catch (error) {
+      console.error("아이디 중복 확인 실패", error);
+      setIsDuplicated(null);
+      return null;
+    }
+  }, []);
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setIdForm((prevForm) => ({
+      ...prevForm,
+      [name]: value,
+    }));
+  }, []);
+
+  return { idCheck, handleChange, isDuplicated };
+}
+
+// SignUpTextInput component
+const SignUpTextInput = ({
+  item,
+  value,
+  onChange,
+  valid,
+  errorMessage,
+  isValid,
+}) => {
+  
   const [inputValue, setInputValue] = useState(value);
+  const [isIdDuplicated, setIsIdDuplicated] = useState(false);
   const [emailList, setEmailList] = useState([]);
 
-  //isIdCheck 커스텀 훅
-  const { idForm, idCheck, handleChange, handleIdCheck } = useIdCheck({
+  const { idCheck } = useIdCheck({
     id: "",
     password: "",
     passwordCheck: "",
@@ -22,7 +64,6 @@ const SignUpTextInput = ({ item, value, onChange, valid, errorMessage }) => {
     setInputValue(value);
   }, [value]);
 
-  //이메일 도메인 목록
   const freEmails = [
     "@naver.com",
     "@gmail.com",
@@ -36,7 +77,7 @@ const SignUpTextInput = ({ item, value, onChange, valid, errorMessage }) => {
   const handleInputChange = (e) => {
     const newValue = e.target.value;
     setInputValue(newValue);
-    onChange(newValue);
+    onChange(item.key, newValue);
 
     if (item.key === "email") {
       const userEmails = freEmails.map((email) =>
@@ -46,10 +87,8 @@ const SignUpTextInput = ({ item, value, onChange, valid, errorMessage }) => {
       );
       setEmailList(userEmails);
     }
-    handleChange(e);
   };
 
-  //비밀번호 보기-숨기기
   const [isHidePwd, setIsHidePwd] = useState(false);
   const passwordRef = useRef(null);
 
@@ -64,8 +103,30 @@ const SignUpTextInput = ({ item, value, onChange, valid, errorMessage }) => {
       password.type = "password";
     }
   };
+  //alert
+  const MySwal = withReactContent(Swal);
 
-  //아이디 input상자,중복확인
+  const handleIdCheck = async () => {
+    const isDup = await idCheck(inputValue);
+    setIsIdDuplicated(isDup);
+    // if (dialogRef.current) {
+    //   dialogRef.current.open();
+    // }
+    if (isDup) {
+      MySwal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "이미 사용중인 아이디입니다.",
+      });
+    } else {
+      MySwal.fire({
+        icon: "success",
+        title: "Okay",
+        text: "사용가능한 아이디입니다.",
+      });
+    }
+  };
+
   if (item.key === "id") {
     return (
       <Container>
@@ -77,13 +138,21 @@ const SignUpTextInput = ({ item, value, onChange, valid, errorMessage }) => {
             value={inputValue}
             onChange={handleInputChange}
             name="id"
-          ></SmallInput>
-          <DupButton onClick={handleIdCheck}>중복확인</DupButton>
+          />
+          <DupButton
+            disabled={!isValid.isId}
+            type="button"
+            onClick={handleIdCheck}
+            $isValid={isValid.isId}
+          >
+            중복확인
+          </DupButton>
         </RowContainer>
         {!valid && <ErrorMessage>{errorMessage}</ErrorMessage>}
+        {/* <Dialog ref={dialogRef} isDuplicated={isIdDuplicated} /> */}
+        {/* Dialog 추가 */}
       </Container>
     );
-    //이메일 input상자,이메일도메인 확인
   } else if (item.key === "email") {
     return (
       <Container>
@@ -105,14 +174,12 @@ const SignUpTextInput = ({ item, value, onChange, valid, errorMessage }) => {
         {!valid && <ErrorMessage>{errorMessage}</ErrorMessage>}
       </Container>
     );
-    //비밀번호,비밀번호확인,이름
   } else {
     return (
       <Container>
         <Text>{item.title}</Text>
         <RowContainer>
           <Input
-            //비밀번호와 텍스트입력 구별
             type={
               item.key.includes("password")
                 ? !isHidePwd
@@ -128,12 +195,10 @@ const SignUpTextInput = ({ item, value, onChange, valid, errorMessage }) => {
           />
           {item.key.includes("password") ? (
             <EyeIconContainer onClick={handleShowPwdChecked}>
-              {/* 비밀번호 안보이기 */}
               {!isHidePwd ? (
                 <AiFillEyeInvisible style={{ fontSize: "30px" }} />
               ) : (
-                // 비밀번호 보이기
-                <AiFillEye style={{ fontSize: "30px" }}></AiFillEye>
+                <AiFillEye style={{ fontSize: "30px" }} />
               )}
             </EyeIconContainer>
           ) : null}
@@ -143,8 +208,8 @@ const SignUpTextInput = ({ item, value, onChange, valid, errorMessage }) => {
     );
   }
 };
-export default memo(SignUpTextInput);
-//=============================================================================================================================
+
+export default SignUpTextInput;
 
 const Container = styled.section`
   display: flex;
@@ -158,9 +223,9 @@ const RowContainer = styled.section`
   display: flex;
   align-items: center;
 `;
+
 const Text = styled.h2`
   text-align: left;
-
   font-size: 22px;
   @font-face {
     font-family: "Pretendard-Black";
@@ -170,6 +235,7 @@ const Text = styled.h2`
   font-weight: 600;
   margin: 5px 0px;
 `;
+
 const Input = styled.input`
   padding: 0px 10px;
   border: #c2c2c2 solid 2px;
@@ -177,31 +243,36 @@ const Input = styled.input`
   width: ${({ theme }) => theme.size.inputSize.width};
   height: ${({ theme }) => theme.size.inputSize.height};
 `;
+
 const SmallInput = styled.input`
   padding: 0px 10px;
   border: #c2c2c2 solid 2px;
   border-radius: 20px;
-  width: calc(${({ theme }) => theme.size.inputSize.width}*0.7);
+  width: calc(${({ theme }) => theme.size.inputSize.width} * 0.7);
   height: ${({ theme }) => theme.size.inputSize.height};
 `;
+
 const DupButton = styled.button`
   padding: 0 10px;
   border: none;
   font-size: 20px;
   font-weight: 600;
   border-radius: 20px;
-  color: white; //아이디 상태변화로 버튼색 변화.
+  color: white;
   margin-left: 10px;
-  width: calc(${({ theme }) => theme.size.inputSize.width}*0.28);
+  width: calc(${({ theme }) => theme.size.inputSize.width} * 0.28);
   height: ${({ theme }) => theme.size.inputSize.height};
-  background-color: ${({ theme }) => theme.color.globalGray};
+  background-color: ${(props) => (props.$isValid ? "#2D62F1" : "#c2c2c2")};
   text-align: center;
+  cursor: ${(props) => (props.$isValid ? "pointer" : "not-allowed")};
 `;
+
 const ErrorMessage = styled.p`
   color: red;
   font-size: 14px;
   margin-top: 0px;
 `;
+
 const EyeIconContainer = styled.div`
   position: absolute;
   right: 10px;
