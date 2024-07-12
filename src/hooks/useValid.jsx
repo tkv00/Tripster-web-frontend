@@ -10,11 +10,11 @@ export default function useValid({ changeValue }) {
   });
 
   const [isValid, setIsValid] = useState({
-    isId: true,
-    isPassword: true,
-    isPasswordCheck: true,
-    isName: true,
-    isEmail: true,
+    isId: false,
+    isPassword: false,
+    isPasswordCheck: false,
+    isName: false,
+    isEmail: false,
   });
 
   //아이디 유효성검사
