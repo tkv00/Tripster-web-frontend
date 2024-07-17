@@ -57,10 +57,10 @@ export default function useValid({ changeValue }) {
   useEffect(() => {
     if (changeValue.password !== changeValue.passwordCheck) {
       setValidText((prev) => ({ ...prev, passwordCheck: "비밀번호가 일치하지 않습니다." }));
-      setIsValid((prev) => ({ ...prev, passwordCheck: false }));
+      setIsValid((prev) => ({ ...prev, isPasswordCheck: false }));
     } else {
       setValidText((prev) => ({ ...prev, passwordCheck: "" }));
-      setIsValid((prev) => ({ ...prev, passwordCheck: true }));
+      setIsValid((prev) => ({ ...prev, isPasswordCheck: true }));
     }
   }, [changeValue.password, changeValue.passwordCheck]);
 
@@ -71,10 +71,10 @@ export default function useValid({ changeValue }) {
       setValidText((prev)=>({...prev,name:"한글을 입력해주세요."}));
       setIsValid((prev)=>({...prev,isName:false}));
     }else{
-      setIsValid((prev)=>({...prev,name:""}));
+      setValidText((prev)=>({...prev,name:""}));
       setIsValid((prev)=>({...prev,isName:true}));
     }
   },[changeValue.name]);
 
-  return { validText, isValid };
+  return { validText, isValid ,setIsValid};
 }

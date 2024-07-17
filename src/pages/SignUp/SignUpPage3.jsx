@@ -6,7 +6,10 @@ import { SignUpContainer, Title } from "./SignUpStyle";
 import { theme } from "../../styles/theme";
 import useValid from "../../hooks/useValid";
 import useIdCheck from "../../hooks/useIdCheck";
-import { Report } from "notiflix/build/notiflix-report-aio";
+import axios from "axios";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import { useNavigate } from "react-router-dom";
 
 const INPUT_ITEM = [
   {
@@ -45,10 +48,14 @@ export default function SignUpPage3() {
     name: "",
     email: "",
   });
-
+  const MySwal = withReactContent(Swal);
+  const navigate=useNavigate();
   //useValid 커스텀 훅
-  const { validText, isValid } = useValid({ changeValue: form });
+  const { validText, isValid , setIsValid} = useValid({ changeValue: form });
   const { idCheck, handleChange, isDuplicated } = useIdCheck(form);
+  const [isIdChecked, setIsIdChecked] = useState(false);
+  const [formValidationComplete, setFormValidationComplete] = useState(false);
+  const [isPasswordConfirm, setIsPasswordConfirm] = useState(false);
   const dialogRef = useRef();
 
   const handleInputChange = useCallback((key, value) => {
@@ -56,33 +63,65 @@ export default function SignUpPage3() {
       ...prevForm,
       [key]: value,
     }));
+    if (key === "id") {
+      setIsIdChecked(false);
+    }
+    if (key == "isPasswordConfirm") {
+      setIsPasswordConfirm(value);
+    }
   }, []);
 
-  // const handleIdCheck = useCallback(async () => {
-  //   const result = await idCheck(form.id);
-  //   if (result === false) {
-  //     Report.success(
-  //       "사용 가능한 아이디",
-  //       "이 아이디를 사용할 수 있습니다.",
-  //       "확인"
-  //     );
-  //   } else if (result === true) {
-  //     Report.failure(
-  //       "중복된 아이디",
-  //       "이미 사용 중인 아이디입니다. 다른 아이디를 선택해주세요.",
-  //       "확인"
-  //     );
-  //   } else {
-  //     Report.warning(
-  //       "오류 발생",
-  //       "아이디 중복 확인 중 오류가 발생했습니다. 다시 시도해주세요.",
-  //       "확인"
-  //     );
-  //   }
-  // }, [form.id, idCheck]);
+  useEffect(() => {
+    const isAllValid = Object.values(isValid).every((valid) => valid === true);
+    const isAllFieldsFilled = Object.values(form).every(
+      (value) => value !== ""
+    );
+    const newFormValidationComplete =
+      isAllValid && isAllFieldsFilled && isIdChecked;
 
-  const formValidationComplete = Object.values(isValid).every(Boolean);
+    console.log("Validation Status:", {
+      isAllValid,
+      isAllFieldsFilled,
+      isIdChecked,
+      newFormValidationComplete,
+    });
 
+    setFormValidationComplete(newFormValidationComplete);
+  }, [isValid, form, isIdChecked]);
+
+  // 디버깅을 위한 로그 추가
+  useEffect(() => {
+    console.log("Current form state:", form);
+    console.log("Current isValid state:", isValid);
+    console.log("isIdChecked:", isIdChecked);
+    console.log("formValidationComplete:", formValidationComplete);
+  }, [form, isValid, isIdChecked, formValidationComplete]);
+
+  const handleIdCheck = useCallback(async () => {
+    const result = await idCheck(form.id);
+    setIsIdChecked(true);
+    if (result === false) {
+      MySwal.fire({
+        icon: "success",
+        title: "사용 가능한 아이디",
+        text: "이 아이디를 사용할 수 있습니다.",
+      });
+    } else if (result === true) {
+      MySwal.fire({
+        icon: "error",
+        title: "중복된 아이디",
+        text: "이미 사용 중인 아이디입니다. 다른 아이디를 선택해주세요.",
+      });
+    } else {
+      MySwal.fire({
+        icon: "warning",
+        title: "오류 발생",
+        text: "아이디 중복 확인 중 오류가 발생했습니다. 다시 시도해주세요.",
+      });
+    }
+  }, [form.id, idCheck]);
+
+  console.log("Form Validation Complete:", formValidationComplete); // 최종 유효성 검증 결과
   // const handle = () => {
   //   Report.failure(
   //     "중복된 아이디",
@@ -90,15 +129,66 @@ export default function SignUpPage3() {
   //     "확인"
   //   );
   // };
+
+  //테스트 서버주소
+  const TEST_URL = "http://localhost:3001";
+
+  //회원가입 제출
+
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // 기본 폼 제출 방지
+    console.log("회원가입 시도"); // 디버깅을 위한 로그
+
+    // 폼 유효성 검증 로직
+    if (!formValidationComplete) {
+      console.log("폼 유효성 검증 실패"); // 유효성 검증 실패 시 로그
+      MySwal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "모든 필드를 올바르게 입력하고 아이디 중복 확인을 완료해주세요.",
+      });
+      return;
+    }
+
+    // API 요청 (회원가입 로직)
+    try {
+      const response = await axios.post(`${TEST_URL}/users`, {
+        id: form.id,
+        password: form.password,
+        name: form.name,
+        email: form.email,
+      });
+
+      if (response.status === 201) {
+        MySwal.fire({
+          icon: "success",
+          title: "회원가입 성공",
+          text: "회원가입이 성공적으로 완료되었습니다.",
+        }).then(()=>{
+          navigate('/login');
+        });
+      }
+    } catch (error) {
+      console.error("회원가입 중 오류 발생", error);
+      MySwal.fire({
+        icon: "error",
+        title: "회원가입 실패",
+        text: "회원가입 중 오류가 발생했습니다. 다시 시도해주세요.",
+      });
+    }
+  };
+
   return (
     // component파일의 SignUpInput 컴포넌트를 봐야함.
     <Wrapper>
       <SignUpContainer>
-        <form>
+        <form onSubmit={handleSubmit}>
           <Title>정보입력</Title>
           <InfoContainer>
             {INPUT_ITEM.map((item) => (
               <SignUpTextInput
+                form={form}
+                handleIdCheck={handleIdCheck}
                 item={item}
                 key={item.key}
                 value={form[item.key]}
@@ -106,6 +196,8 @@ export default function SignUpPage3() {
                 valid={isValid[item.validName]}
                 errorMessage={validText[item.key]}
                 isValid={isValid}
+                setIsValid={setIsValid}
+                idCheck={item.key === "id" ? handleIdCheck : undefined}
                 //handleIdCheck={item.key === "id" ? handleIdCheck : undefined}
               />
             ))}
@@ -118,7 +210,7 @@ export default function SignUpPage3() {
     </Wrapper>
   );
 }
-//====================================================
+//===================================================================================
 
 const InfoContainer = styled.div`
   align-items: center;
@@ -136,4 +228,5 @@ const SubmitButton = styled.button`
   color: white;
   font-size: 20px;
   font-weight: 600;
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
 `;
